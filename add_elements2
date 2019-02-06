@@ -1,0 +1,124 @@
+#!/usr/bin/env python
+
+import requests
+import time
+import json
+import uuid
+
+now = time.time()
+idstring  = str(uuid.uuid4().get_hex())
+data = {
+    "class": "uk.gov.gchq.gaffer.operation.impl.add.AddElements",
+    "validate": True,
+    "skipInvalidElements": False,
+    "input": [
+	{
+	    "class": "uk.gov.gchq.gaffer.data.element.Entity",
+	    "group": "device",
+	    "vertex": "mark-mac",
+	    "properties": {
+		"count": 1,
+            }
+        },
+	{
+	    "class": "uk.gov.gchq.gaffer.data.element.Entity",
+	    "group": "id",
+	    "vertex": idstring,
+	    "properties": {
+		"count": 1,
+            }
+        },
+	{
+	    "class": "uk.gov.gchq.gaffer.data.element.Edge",
+	    "group": "devicerisk",
+	    "source": "mark-mac",
+	    "destination": "warez",
+	    "directed": True,
+	    "properties": {
+		"count": 1,
+                "time": {
+		    "uk.gov.gchq.gaffer.time.RBMBackedTimestampSet": {
+ 		        "timeBucket" : "MINUTE",
+			"timestamps" : [ now ]
+		    }
+	        }
+            }
+        },
+
+	{
+	    "class": "uk.gov.gchq.gaffer.data.element.Edge",
+	    "group": "idrelation",
+	    "source": "mark-mac",
+	    "destination": idstring,
+	    "directed": True,
+	    "properties": {
+		"count": 1,
+                "time": {
+		    "uk.gov.gchq.gaffer.time.RBMBackedTimestampSet": {
+ 		        "timeBucket" : "MINUTE",
+			"timestamps" : [ now ]
+		    }
+	        }
+            }
+        },
+        {
+	    "class": "uk.gov.gchq.gaffer.data.element.Edge",
+	    "group": "idrelation",
+	    "source": idstring,
+	    "destination": "mark-mac",
+	    "directed": True,
+	    "properties": {
+		"count": 1,
+                "time": {
+		    "uk.gov.gchq.gaffer.time.RBMBackedTimestampSet": {
+ 		        "timeBucket" : "MINUTE",
+			"timestamps" : [ now ]
+		    }
+	        }
+            }
+        },
+	{
+	    "class": "uk.gov.gchq.gaffer.data.element.Edge",
+	    "group": "idrelation",
+	    "source": "warez",
+	    "destination": idstring,
+	    "directed": True,
+	    "properties": {
+		"count": 1,
+                "time": {
+		    "uk.gov.gchq.gaffer.time.RBMBackedTimestampSet": {
+ 		        "timeBucket" : "MINUTE",
+			"timestamps" : [ now ]
+		    }
+	        }
+            }
+        },
+        {
+	    "class": "uk.gov.gchq.gaffer.data.element.Edge",
+	    "group": "idrelation",
+	    "source": idstring,
+	    "destination": "warez",
+	    "directed": True,
+	    "properties": {
+		"count": 1,
+                "time": {
+		    "uk.gov.gchq.gaffer.time.RBMBackedTimestampSet": {
+ 		        "timeBucket" : "MINUTE",
+			"timestamps" : [ now ]
+		    }
+	        }
+            }
+        },
+
+    ]
+}
+
+data = json.dumps(data)
+
+url = "http://localhost:8080/rest/v2/graph/operations/execute"
+
+response = requests.post(url, data, headers={'content-type':'application/json'})
+
+print "Status:",response.status_code
+print response.text
+

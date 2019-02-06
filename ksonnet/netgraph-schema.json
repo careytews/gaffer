@@ -1,0 +1,125 @@
+{
+  "entities": {
+    "ip": {
+      "vertex": "string",
+      "properties": {
+          "count": "int",
+           "time": "timestamp.set"
+      }
+    },
+    "tcp": {
+      "vertex": "string",
+      "properties": {
+          "count": "int",
+          "time": "timestamp.set"
+      }
+    },
+    "udp": {
+      "vertex": "string",
+      "properties": {
+          "count": "int",
+          "time": "timestamp.set"
+      }
+    },   
+    "device": {
+      "vertex": "string",
+      "properties": {
+        "count": "int",
+        "network": "string",
+          "time": "timestamp.set"
+      }
+    },
+    "network": {
+      "vertex": "string",
+      "properties": {
+          "count": "int",
+          "time": "timestamp.set"
+      }
+    }
+  },
+  "edges": {
+    "ipflow": {
+      "source": "string",
+      "destination": "string",
+      "directed": "true",
+      "properties": {
+          "count": "int",
+          "device": "string",
+          "network": "string",
+          "time": "timestamp.set"
+      }
+    },
+    "tcpflow": {
+      "source": "string",
+      "destination": "string",
+      "directed": "true",
+      "properties": {
+          "count": "int",
+          "device": "string",
+          "network": "string",
+          "time": "timestamp.set"
+      }
+    },
+    "udpflow": {
+      "source": "string",
+      "destination": "string",
+      "directed": "true",
+      "properties": {
+          "count": "int",
+          "device": "string",
+          "network": "string",
+          "time": "timestamp.set"
+      }
+    },
+    "devrelation": {
+      "source": "string",
+      "destination": "string",
+      "directed": "true",
+      "properties": {
+          "count": "int",
+          "network": "string",
+          "time": "timestamp.set"
+      }
+    },
+    "netrelation": {
+        "source": "string",
+        "destination": "string",
+        "directed": "true",
+        "properties": {
+            "count": "int",
+            "time": "timestamp.set"
+        }
+    }
+  },
+  "types": {
+    "int": {
+      "class": "java.lang.Integer",
+      "aggregateFunction": {
+        "class": "uk.gov.gchq.koryphe.impl.binaryoperator.Sum"
+      }
+    },
+    "string": {
+      "class": "java.lang.String",
+      "aggregateFunction": {
+        "class": "uk.gov.gchq.koryphe.impl.binaryoperator.First"
+      }
+    },
+    "true": {
+      "class": "java.lang.Boolean",
+      "validateFunctions": [
+        {
+          "class": "uk.gov.gchq.koryphe.impl.predicate.IsTrue"
+        }
+      ]
+    },
+    "timestamp.set": {
+      "class": "uk.gov.gchq.gaffer.time.RBMBackedTimestampSet",
+      "aggregateFunction": {
+        "class": "uk.gov.gchq.gaffer.time.binaryoperator.RBMBackedTimestampSetAggregator"
+      },
+      "serialiser": {
+        "class": "uk.gov.gchq.gaffer.time.serialisation.RBMBackedTimestampSetSerialiser"
+      }
+    }
+  }
+}

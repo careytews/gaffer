@@ -1,0 +1,299 @@
+#!/usr/bin/env python
+
+#
+# Usage:  stream-json streaming.ops.trustnetworks.com 3333 KEY [max number of events]
+
+import hashlib
+import base64
+import os
+import sys
+import socket
+import json
+import requests
+
+#Table to identify JSON Action's that we care about
+#for service and servicerisk entities
+
+actionToServiceMap = {
+   'dns_message': 'dnsrequest',
+   'http_request': 'httprequest',
+   }
+
+actionFilterMap = {
+   'connected_up': True,
+   'conencted_down': True,
+   }
+
+#
+# Take an IP address string and turn it into an integer
+def ipv4ToInt(ip):
+   a = int(0)
+   ipl = ip.split('.')
+   for ips in ipl:
+      a = (a<<8) + int(ips)
+   return a
+
+def intToIpv4(ipb):
+   s = ""
+   return s.join([format((ipb>>24)&0xff,'d'),'.',\
+                  format((ipb>>16)&0xff,'d'),'.',\
+                  format((ipb>>8)&0xff,'d'),'.',\
+                  format(ipb&0xff,'d')])
+
+def ipv4CidrMask(x):
+   if x>0 and x<32:
+      return (0xffffffff<<(32-x))&0xffffffff
+   elif x<=0:
+      return 0
+   else:
+      return 0xffffffff
+
+#
+# Take a list of strings that look like ['xxx:yyy']
+# and turn it into a dict that looks like { 'xxx':'yyy' }
+def extractListToDict(tl):
+   d = {}
+   for x in tl:
+      if ':' in x:
+         sx = x.split(':',1)
+      else:
+         sx = [ x , True ]
+      d[sx[0]] = sx[1]
+   return d
+
+if len(sys.argv) != 4 and len(sys.argv) != 5:
+   sys.stderr.write("Usage:\n")
+   sys.stderr.write("  stream-client host port keyfile [max number of events]\n")
+   sys.exit(1)
+
+host = sys.argv[1]
+port = int(sys.argv[2])
+
+if len(sys.argv) == 5:
+   maxNumberOfEvents = int(sys.argv[4])
+else:
+   maxNumberOfEvents = 0
+
+totalEvents = 0
+totalElements = 0
+   
+with open(sys.argv[3], "r") as file:
+     key = file.read()
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect((host, port))
+
+challenge = ""
+while True:
+      buf = sock.recv(1)
+
+      if buf[0] == '\r': continue
+      if buf[0] == '\n': break
+      challenge += buf[0]
+
+response = key + ":" + base64.b64decode(challenge)
+hash = hashlib.sha256()
+hash.update(response)
+response = base64.b64encode(hash.digest()) + "\n"
+
+sock.send(response)
+
+sockAddr  = sock.getpeername()
+
+# Data will be streaming to the socket now
+# Add some file processing compatibility to the socket
+# then start processing.. One json message per line
+
+jsonSockFp = sock.makefile()
+
+jsonList = {}
+actionList = {}
+while maxNumberOfEvents == 0 or totalEvents < maxNumberOfEvents:
+
+   a = jsonSockFp.readline()
+   if not a: break
+   j = json.loads(a)
+
+   # Fix up the src and dest json struct to be key value pairs
+   # instead of a tabulated list
+   src  = extractListToDict(j['src'])
+   dest = extractListToDict(j['dest'])
+
+   # Filter out streamer data....
+   if 'tcp' in src and  src['tcp'] == str(sockAddr[1]) \
+      and (( 'ipv4' in src and src['ipv4'] == str(sockAddr[0]))): continue
+   if 'tcp' in dest and  dest['tcp'] == str(sockAddr[1]) \
+      and (( 'ipv4' in dest and dest['ipv4'] == str(sockAddr[0]))): continue
+
+
+   #   print json.dumps(j,indent=2)
+   
+   #  print src
+   # print dest
+   #   if 'device' in j :
+   #   print j['device']
+   #   if 'location' in j :
+   #  print j['location']
+
+   #print json.dumps(j,indent=2)
+
+   for a in j.keys():
+      if a in jsonList.keys():
+         jsonList[a] = jsonList[a] + 1
+      else:
+         jsonList[a] = int(1)
+
+
+   action = j['action']
+   device = j['device']   
+   if action in actionList.keys():
+      actionList[action] = actionList[action] + 1
+   else:
+      actionList[action] = int(1)
+
+   print '+'
+   if action in actionFilterMap:
+      continue
+
+      
+   #if 'indicators' in j:
+   #print json.dumps(j,indent=2)
+   #print jsonList,'\n*****'
+   #print actionList,'\n*****'
+   #else:
+   #   continue
+
+   
+   
+   totalEvents += 1      
+   # continue
+
+   #
+   # Todo map from analytic json into json that matches the GAFFER model
+
+   service = ''
+   vertices = []
+   edges = []
+   sip = ""
+   sport = ""
+   dip = ""
+   dport = ""
+   proto = ""
+   elements = 0
+
+   if action in actionToServiceMap:
+      service = actionToServiceMap[action]
+
+   for k in src.keys():
+      addr = src[k];
+      if k == 'ipv4':
+         sip = addr
+      elif k == 'tcp':
+         sport = addr
+         proto = k
+      elif k == 'udp':
+         sport = addr
+         proto = k
+      else:
+         continue
+         
+   
+   for k in dest.keys():
+      addr = dest[k];
+      if k == 'ipv4':
+         dip = addr
+      elif k == 'tcp':
+         dport = addr
+         proto = k
+      elif k == 'udp':
+         dport = addr
+         proto = k
+      else:
+         continue
+            
+   if sip != '' and sport != '' and dip != '' and dport != '' and proto != '':
+      srcs = sip + ':' + sport
+      dests = sip + ':' + dport
+      vertices.append(['ip',sip])
+      vertices.append(['ip',dip])
+      edges.append(['ipflow',sip,dip])
+      if proto == 'tcp':
+         vertices.append(['tcp',srcs])
+         vertices.append(['tcp',dests])
+         edges.append(['tcpflow',srcs,dests])
+      if proto == 'udp':
+         vertices.append(['udp',srcs])
+         vertices.append(['udp',dests])
+         edges.append(['udpflow',srcs,dests])
+         
+      if service != '':   
+         if  service == 'httprequest' and 'url' in j:
+            edges.append([service,srcs,j['url']])
+            vertices.append(['service',service,j['url']])
+            
+         if service == 'dnsrequest' and j['dns_message']['type'] == 'query':
+            for v in j['dns_message']['query']:
+               edges.append([service,srcs,v['name']])
+               vertices.append(['service',service,v['name']])
+   
+   if 'device' in j:
+      device = j['device']
+      vertices.append(['device',device])
+   else:
+      device = ''
+      
+   if 'indicators' in j:
+      for ind in j['indicators']:
+         if device != '':
+            edges.append(['devicerisk',device,ind['category'],j['time']])
+         if service != '':
+            edges.append(['servicerisk',service,ind['category'],j['time']])
+
+
+   body = {}
+   items = []
+            
+   for v in vertices:
+      elements = elements + 1
+      item = { 'class':'uk.gov.gchq.gaffer.data.element.Entity',
+               'group':v[0],
+               'vertex':v[1],
+               'properties':{'count':1}
+      }        
+      items.append(item)
+      if v[0] == 'service':
+            item['properties'].update({'type':v[2]})
+
+   for e in edges:
+      elements = elements + 1
+      item = { 'class':'uk.gov.gchq.gaffer.data.element.Edge',
+               'group':e[0],
+               'source':e[1],
+               'destination':e[2],
+               'directed': True,
+               'properties':{'count':1}
+      }
+      if e[0] == 'devicerisk' or e[0] == 'servicerisk':
+         item['properties'].update({'time':{\
+                                       'uk.gov.gchq.gaffer.time.RBMBBackedTimestampSet':{\
+                                                'timeBucket':'MINUTE',\
+                                                'timestamps':e[3]}}})
+      items.append(item)
+      
+
+   body = { 'class':'uk.gov.gchq.gaffer.operation.impl.add.AddElements',
+            'validate':True,
+            'skipInvalidElements':False,
+            'input':items}
+      
+   #print body
+
+   data = json.dumps(body);
+   totalElements = totalElements + elements
+   print json.dumps(body,indent=2)
+   print totalEvents,totalElements,'(',elements,')'
+   url = "http://localhost:8080/rest/v2/graph/operations/execute"
+   
+   response = requests.post(url, data, headers={'content-type':'application/json'})
+
+   

@@ -1,0 +1,100 @@
+{
+  "entities": {
+    "device": {
+      "vertex": "string",
+      "properties": {
+        "count": "int",
+        "network": "string"
+      }
+    },
+    "service": {
+      "vertex": "string",
+      "properties": {
+        "type": "string",
+        "count": "int"
+      }
+    },
+    "riskcategory": {
+      "vertex": "string",
+      "properties": {
+        "a": "riskFactor",
+        "b": "riskFactor",
+        "risk": "riskFactor",
+        "decay": "riskDecay",
+        "count": "int"
+      }
+    }
+  },
+  "edges": {
+    "devicerisk": {
+      "source": "string",
+      "destination": "string",
+      "directed": "true",
+      "properties": {
+        "count": "int",
+        "time": "timestamp.set" 
+      }
+    },
+    "servicerisk": {
+      "source": "string",
+      "destination": "string",
+      "directed": "true",
+      "properties": {
+        "count": "int",
+        "time": "timestamp.set" 
+      }
+    },
+    "deviceservice": {
+      "source": "string",
+      "destination": "string",
+      "directed": "true",
+      "properties": {
+        "count": "int",
+        "time": "timestamp.set" 
+      }
+    }
+  },
+  "types": {
+    "int": {
+      "class": "java.lang.Integer",
+      "aggregateFunction": {
+        "class": "uk.gov.gchq.koryphe.impl.binaryoperator.Sum"
+      }
+    },
+    "string": {
+      "class": "java.lang.String",
+      "aggregateFunction": {
+        "class": "uk.gov.gchq.koryphe.impl.binaryoperator.First"
+      }
+    },
+    "riskFactor": {
+      "class": "java.lang.Double",
+      "aggregateFunction": {
+        "class": "uk.gov.gchq.koryphe.impl.binaryoperator.First"
+      }
+    },
+    "riskDecay": {
+      "class": "java.lang.Integer",
+      "aggregateFunction": {
+        "class": "uk.gov.gchq.koryphe.impl.binaryoperator.First"
+      }
+    },
+    "true": {
+      "class": "java.lang.Boolean",
+      "validateFunctions": [
+        {
+          "class": "uk.gov.gchq.koryphe.impl.predicate.IsTrue"
+        }
+      ]
+    },
+    "timestamp.set": {
+      "class": "uk.gov.gchq.gaffer.time.RBMBackedTimestampSet",
+      "aggregateFunction": {
+        "class": "uk.gov.gchq.gaffer.time.binaryoperator.RBMBackedTimestampSetAggregator"
+      },
+      "serialiser": {
+        "class": "uk.gov.gchq.gaffer.time.serialisation.RBMBackedTimestampSetSerialiser"
+      }
+    }
+  }
+}

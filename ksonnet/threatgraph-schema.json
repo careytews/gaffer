@@ -1,0 +1,359 @@
+{
+    "entities": {
+        "ip": {
+            "vertex": "string",
+            "properties": {
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "domain": {
+            "vertex": "string",
+            "properties": {
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "email": {
+            "vertex": "string",
+            "properties": {
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "identity": {
+            "vertex": "string",
+            "properties": {
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "hostname": {
+            "vertex": "string",
+            "properties": {
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "server": {
+            "vertex": "string",
+            "properties": {
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "attacker": {
+            "vertex": "string",
+            "properties": {
+                "type": "string",
+                "source": "string",
+                "publisher": "string",
+                "update": "timestamp.set",
+                "version": "string",
+                "risk": "riskFactor"
+            }
+        },
+        "device": {
+            "vertex": "string",
+            "properties": {
+                "count": "int",
+                "network": "string",
+                "time": "timestamp.set"
+            }
+        },
+        "tactics": {
+            "vertex": "string",
+            "properties": {
+                "type": "string",
+                "source": "string",
+                "publisher": "string",
+                "update": "timestamp.set",
+                "version": "string",
+                "risk": "riskFactor"
+            }
+        },
+        "intrusion": {
+            "vertex": "string",
+            "properties": {
+                "type": "string",
+                "source": "string",
+                "publisher": "string",
+                "update": "timestamp.set",
+                "version": "string",
+                "risk": "riskFactor"
+            }
+        },
+        "indicator": {
+            "vertex": "string",
+            "properties": {
+                "type": "string",
+                "source": "string",
+                "publisher": "string",
+                "update": "timestamp.set",
+                "version": "string",
+                "risk": "riskFactor"
+            }
+        },
+        "report": {
+            "vertex": "string",
+            "properties": {
+                "type": "string",
+                "source": "string",
+                "publisher": "string",
+                "update": "timestamp.set",
+                "version": "string",
+                "probability": "riskFactor"
+            }
+        },
+        "blacklist": {
+            "vertex": "string",
+            "properties": {
+                "type": "string",
+                "source": "string",
+                "publisher": "string",
+                "update": "timestamp.set",
+                "version": "string",
+                "probability": "riskFactor"
+            }
+        },
+        "whois": {
+            "vertex": "string",
+            "properties": {
+                "created": "time",
+                "updated": "time",
+                "expires": "time",
+                "nameservers": "string",
+                "server": "string",
+                "country": "string",
+                "lookup": "time",
+                "registrarid": "registrar"
+            }
+        },
+        "version": {
+            "vertex": "string",
+            "properties": {
+                "vendor": "string",
+                "time": "timestamp.set"
+            }
+        },
+        "ja3": {
+            "vertex": "string",
+            "properties": {                              
+                "time": "timestamp.set"                
+            }
+        }
+    },
+    "edges": {
+        "ipflow": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "action": "string",
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "dns": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "action": "string",
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "indomain": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "action": "string",
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "dnsquery": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "action": "string",
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "webrequest": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "action": "string",
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "hosts": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "action": "string",
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "threat": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "attacks": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "matches": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set",
+                "description": "string",
+                "status": "string",
+                "severity": "string",
+                "id": "string"
+            }
+        },
+        "useragent": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "serves": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "action": "string",
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "probed": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "probe": "string",
+                "probetime": "time",
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "hasip": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "type": "string",
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "isrunning": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        },
+        "isemitting": {
+            "source": "string",
+            "destination": "string",
+            "directed": "true",
+            "properties": {
+                "count": "int",
+                "time": "timestamp.set"
+            }
+        }
+    },
+    "types": {
+        "int": {
+            "class": "java.lang.Integer",
+            "aggregateFunction": {
+                "class": "uk.gov.gchq.koryphe.impl.binaryoperator.Sum"
+            }
+        },
+        "time": {
+            "class": "java.lang.Integer",
+            "aggregateFunction": {
+                "class": "uk.gov.gchq.koryphe.impl.binaryoperator.First"
+            }
+        },
+        "string": {
+            "class": "java.lang.String",
+            "aggregateFunction": {
+                "class": "uk.gov.gchq.koryphe.impl.binaryoperator.First"
+            }
+        },
+        "riskFactor": {
+            "class": "java.lang.Double",
+            "aggregateFunction": {
+                "class": "uk.gov.gchq.koryphe.impl.binaryoperator.First"
+            }
+        },
+        "true": {
+            "class": "java.lang.Boolean",
+            "validateFunctions": [
+                {
+                    "class": "uk.gov.gchq.koryphe.impl.predicate.IsTrue"
+                }
+            ]
+        },
+        "timestamp.set": {
+            "class": "uk.gov.gchq.gaffer.time.RBMBackedTimestampSet",
+            "aggregateFunction": {
+                "class": "uk.gov.gchq.gaffer.time.binaryoperator.RBMBackedTimestampSetAggregator"
+            },
+            "serialiser": {
+                "class": "uk.gov.gchq.gaffer.time.serialisation.RBMBackedTimestampSetSerialiser"
+            }
+        },
+        "registrar": {
+            "class": "java.lang.Integer",
+            "aggregateFunction": {
+                "class": "uk.gov.gchq.koryphe.impl.binaryoperator.First"
+            }
+        }
+    }
+}

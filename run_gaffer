@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Location for persistent data
+data_dir=/tmp/data
+
+# Maybe clear stuff out?
+sudo rm -rf ${data_dir}
+
+GAFFER_VERSION=1.0.2c
+GAFFER_TN_VERSION=1.0.2c
+
+# Initialise data directory for Hadoop, ZK, Accumulo
+mkdir -p ${data_dir}/hadoop
+mkdir -p ${data_dir}/zookeeper
+
+# May be needed on your system to keep SElinux happy.
+sudo chcon -Rt svirt_sandbox_file_t ${data_dir}
+
+# Run Hadoop
+docker run -d --name hadoop -v ${data_dir}/hadoop:/data \
+       docker.io/cybermaggedon/hadoop:2.8.1
+
+# Run Zookeeper
+docker run -d --name zookeeper -v ${data_dir}/zookeeper:/data \
+       docker.io/cybermaggedon/zookeeper:3.4.10b
+
+sleep 10
+
+# Run Accumulo
+docker run -d --name accumulo \
+       --link zookeeper:zookeeper \
+       --link hadoop:hadoop \
+       docker.io/cybermaggedon/accumulo-gaffer:${GAFFER_VERSION}
+
+# Run Wildfly, exposing port 8080.
+docker run -d --name gaffer --link zookeeper:zookeeper \
+       --link hadoop:hadoop --link accumulo:accumulo \
+       -p 8080:8080 \
+       gcr.io/trust-networks/gaffer:${GAFFER_TN_VERSION}
+

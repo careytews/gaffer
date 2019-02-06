@@ -1,0 +1,127 @@
+#!/usr/bin/env python
+
+import requests
+import mmap
+import sys
+
+# inputFile - Name of the file to read records from
+inputFile = "all.json"
+
+#
+# skipToByte  - start processing at this byte in the file
+# recOffset   - used to initialize number of JSON records processed
+# skipPastRec - skip this number of JSON records after skipToByte applied 
+# 
+# Normally you would set skipToBye or skipPastRec not both
+# Be careful if you set boath recOffset and skipPastRec to non-zero values
+skipToByte   = 0 
+recOffset    = 0
+skipPastRec  = 0
+
+
+# This is the buffer or POST size. Each post will be at least
+# this number of bytes. (Last one will likely be less)
+# Max GAFFER post is 1M
+bytesPerPost = 500000
+
+#
+# URL to use for POST
+#
+# Select target GAFFER with the following command
+# kubectl port-forward gaffer-XXXXX-YYYY 8080
+#
+url = 'http://localhost:8080/rest/v2/graph/operations/execute'
+
+
+# ######################################
+# Main processing  below
+# ######################################
+
+# postJson must be True to actually post data to Gaffer
+postJson     = False
+
+# Gaffer Post wrappers
+gafferAddElements = """{
+"class": "uk.gov.gchq.gaffer.operation.impl.add.AddElements",
+"validate": true,
+"skipInvalidElements": false,
+"input":["""
+
+gafferEndAddElements = """
+]}
+"""
+
+# function to do the post
+def postIt(jsonRecs):
+    postData = gafferAddElements+jsonRecs+gafferEndAddElements
+    print "<",
+    if postJson:
+       response = requests.post(url,postData,
+                                headers={'content-type': 'application/json'})
+       print "Status:",response.status_code,
+       if response.status_code != 200:
+#         print postData
+          exit()
+    else:
+       print "NO POST",
+    print ">",
+
+# ###############
+# MAIN LOOP
+# ###############
+if len(sys.argv) > 2 or (len(sys.argv)==2 and
+                             sys.argv[1]!="-w" ):
+   print "Usage:"
+   print "  put_all [-w]"
+   exit()
+
+if len(sys.argv) == 2 and sys.argv[1]=="-w":
+   postJson     = True
+   print "Post to Gaffer enabled!"
+
+print "Processing data from:", inputFile
+
+with open(inputFile,"rb") as f:
+     mm = mmap.mmap(f.fileno(),0,access=mmap.ACCESS_READ)
+     recCount = recOffset
+     if skipToByte == 0:
+        current = mm.find("[")
+     else:
+        current = skipToByte
+     print "skip to "+str(current)
+     startRec  = 0
+     openCount = 0
+     totalSize = mm.size()
+     started = False
+     start = 0
+     end   = 0
+     buf = gafferAddElements 
+     while current < totalSize :
+        if mm[current] == '{' :
+           openCount = openCount + 1
+           if not started:
+               start = current
+               end   = current
+               started = True
+               startRec = recCount
+        elif mm[current] == '}':
+           if started :
+              openCount = openCount - 1
+              if openCount == 0:
+                recCount = recCount +1
+                end     = current + 1 
+                if recCount <= skipPastRec:
+                   started = False
+               
+        current = current + 1
+
+        if started and openCount == 0 :
+          if (end - start > bytesPerPost):
+             postIt(mm[start:end])
+             print "+",start,end,startRec,recCount
+             started = False
+
+     if started and (end - start)>0:
+        postIt(mm[start:end])
+        print "+",start,end,startRec,recCount
+     print "Bytes Processed:", current
